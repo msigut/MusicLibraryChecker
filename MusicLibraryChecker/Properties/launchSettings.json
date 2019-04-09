@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MusicLibraryChecker": {
+      "commandName": "Project",
+      "commandLineArgs": "auralic --path=\\\\syrarna\\music\\_flac --fix"
+    }
+  }
+}
