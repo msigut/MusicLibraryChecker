@@ -1,4 +1,4 @@
-﻿using McMaster.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 using MusicLibraryChecker.Commands;
 using System;
 using System.Text;
@@ -23,10 +23,11 @@ namespace MusicLibraryChecker
             {
                 cfg.Description = "Check music library for Auralic Aries devices reading and using best practice";
 
-                var path = cfg.Option("--path", "File path", CommandOptionType.SingleValue);
-                var fix = cfg.Option("--fix", "Fix issues", CommandOptionType.NoValue);
+                var path = cfg.Option("-p|--path", "File paths", CommandOptionType.MultipleValue);
+				var recursive = cfg.Option("-r|--recursive", "Recursive directory search", CommandOptionType.NoValue);
+				var fix = cfg.Option("-f|--fix", "Fix issues", CommandOptionType.NoValue);
 
-                cfg.OnExecute(() => AuralicCommand.Execute(path.Value(), fix.HasValue()));
+                cfg.OnExecute(() => AuralicCommand.Execute(path.Values, recursive.HasValue(), fix.HasValue()));
             });
 
             app.OnExecute(() =>
