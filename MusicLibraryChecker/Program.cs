@@ -30,7 +30,17 @@ namespace MusicLibraryChecker
                 cfg.OnExecute(() => AuralicCommand.Execute(path.Values, recursive.HasValue(), fix.HasValue()));
             });
 
-            app.OnExecute(() =>
+			app.Command("list", cfg =>
+			{
+				cfg.Description = "List music library";
+
+				var path = cfg.Option("-p|--path", "File paths", CommandOptionType.MultipleValue);
+				var recursive = cfg.Option("-r|--recursive", "Recursive directory search", CommandOptionType.NoValue);
+
+				cfg.OnExecute(() => ListCommand.Execute(path.Values, recursive.HasValue()));
+			});
+
+			app.OnExecute(() =>
             {
                 Console.WriteLine("Specify command");
                 app.ShowHelp();

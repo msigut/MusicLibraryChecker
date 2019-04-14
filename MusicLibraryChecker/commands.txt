@@ -1,0 +1,5 @@
+# auralic
+auralic --path=\\syrarna\music\ -r -f
+
+# list
+list --path=\\syrarna\music\ -r

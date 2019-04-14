@@ -1,14 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
+using System.Linq;
 
 namespace MusicLibraryChecker
 {
     public static class Extensions
     {
-        #region SizeSuffix
+		#region SizeSuffix
 
-        static readonly string[] _sizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+		private static readonly string[] _sizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
 
         public static string SizeSuffix(this long value, int decimalPlaces = 1)
         {
@@ -36,6 +37,65 @@ namespace MusicLibraryChecker
                 _sizeSuffixes[mag]);
         }
 
-        #endregion
-    }
+		#endregion
+
+		#region Directory
+
+		/// <summary>
+		/// music file extensions
+		/// </summary>
+		public static readonly string[] MUSIC_EXTS = new[] { ".flac", ".mp3" };
+		/// <summary>
+		/// ID3 tags file extensions
+		/// </summary>
+		public static readonly string[] TAG_EXTS = new[] { ".flac" };
+
+		/// <summary>
+		/// finds all directories contains any of given file extensions
+		/// </summary>
+		internal static IReadOnlyCollection<DirectoryInfo> DirectoriesContainsExtensions(this IReadOnlyCollection<string> paths, bool recursive, string[] findExtensions = null)
+		{
+			var result = new List<DirectoryInfo>();
+
+			// default extensions
+			if (findExtensions == null)
+			{
+				findExtensions = MUSIC_EXTS;
+			}
+
+			foreach (var path in paths)
+			{
+				// directory info
+				var pathInfo = new DirectoryInfo(path);
+				if (!pathInfo.Exists)
+				{
+					Console.WriteLine($"ERR {path} doesn't exist.");
+					continue;
+				}
+
+				var temp = pathInfo.GetDirectories("*", (recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly));
+
+				// only directories contains any of given extensions
+				result.AddRange(temp.Where(x => x.GetFiles().Any(y => findExtensions.Contains(y.Extension.ToLowerInvariant()))));
+			}
+
+			return result.OrderBy(x => x.FullName).ToList();
+		}
+
+		/// <summary>
+		/// finds all files with given extensions
+		/// </summary>
+		internal static IReadOnlyCollection<FileInfo> FilesWithExtensions(this DirectoryInfo directory, string[] findExtensions = null)
+		{
+			// default extensions
+			if (findExtensions == null)
+			{
+				findExtensions = MUSIC_EXTS;
+			}
+
+			return directory.GetFiles().Where(x => findExtensions.Contains(x.Extension.ToLowerInvariant())).ToList();
+		}
+
+		#endregion
+	}
 }
