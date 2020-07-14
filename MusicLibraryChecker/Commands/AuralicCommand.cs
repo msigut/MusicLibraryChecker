@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace MusicLibraryChecker.Commands
 {
@@ -37,6 +38,43 @@ namespace MusicLibraryChecker.Commands
 					if (fix)
 					{
 						File.Delete(hidden.FullName);
+					}
+				}
+
+				// log files
+				var logs = dir.GetFiles("*.log", SearchOption.AllDirectories);
+				foreach (var log in logs)
+				{
+					Console.WriteLine($"+LOG     {log.FullName}");
+
+					if (fix)
+					{
+						File.Delete(log.FullName);
+					}
+				}
+
+				// delete duplicity files (non-music files, root first then other directories)
+				var duplicities = dir.GetFiles("*", SearchOption.AllDirectories)
+					.Where(x => x.Extension.ToLowerInvariant() != ".flac")
+					.OrderBy(x => x.FullName.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Length)
+					.ThenBy(x => x.FullName);
+
+				var hashes = new Dictionary<string, string>();
+				foreach (var duplicity in duplicities)
+				{
+					var hash = BitConverter.ToString(ComputeHash(duplicity.FullName));
+					if (hashes.ContainsKey(hash))
+					{
+						Console.WriteLine($"+DUPLIC  {duplicity.FullName} [{hashes[hash].Replace(dir.FullName, "")}]");
+
+						if (fix)
+						{
+							File.Delete(duplicity.FullName);
+						}
+					}
+					else
+					{
+						hashes.Add(hash, duplicity.FullName);
 					}
 				}
 
@@ -122,7 +160,7 @@ namespace MusicLibraryChecker.Commands
 					var files = folderArt.GetFiles();
 					foreach (var file in files)
 					{
-						Console.WriteLine($"!ART     {file.FullName} {file.Length.SizeSuffix()}");
+						Console.WriteLine($"!ART     {file.FullName} [{file.Length.SizeSuffix()}]");
 
 						if (fix)
 						{
@@ -142,7 +180,7 @@ namespace MusicLibraryChecker.Commands
 
 					if (fix)
 					{
-						if (folderArt.GetFiles().Length == 0)
+						if (folderArt.GetFiles("*", SearchOption.AllDirectories).Length == 0)
 						{
 							Directory.Delete(folderArt.FullName);
 						}
@@ -196,5 +234,16 @@ namespace MusicLibraryChecker.Commands
 				}
 			}
         }
+
+		private static byte[] ComputeHash(string filename)
+		{
+			using (var md5 = MD5.Create())
+			{
+				using (var stream = File.OpenRead(filename))
+				{
+					return md5.ComputeHash(stream);
+				}
+			}
+		}
 	}
 }

@@ -2,7 +2,7 @@
   "profiles": {
     "MusicLibraryChecker": {
       "commandName": "Project",
-      "commandLineArgs": "list --path=\\\\syrarna\\music\\ -r"
+      "commandLineArgs": "auralic --path=e:\\_flac_classics -r"
     }
   }
 }
